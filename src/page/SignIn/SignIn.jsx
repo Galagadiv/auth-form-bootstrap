@@ -7,41 +7,15 @@ import {Link, useNavigate} from "react-router-dom";
 import InputGroup from "react-bootstrap/InputGroup";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
 
-export default function SignUp() {
+export default function SignIn() {
 	const navigate = useNavigate();
 	const [email, setEmail] = useState("");
 	const [pass, setPass] = useState("");
-	const [passRepeat, setPassRepeat] = useState("");
-	const passRepeatRef = useRef(null);
-	const [passMatchError, setPassMatchError] = useState(null);
 
-	const validatePassword = (password) => {
-		const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/;
-		if (!passwordRegex.test(password)) {
-			return true;
-		}
-		return false;
+	const handleLogin = async (e) => {
+		e.preverntDefault();
+		navigate("/");
 	};
-
-	useEffect(() => {
-		if (passRepeatRef.current && validatePassword(pass) && passRepeat !== "") {
-			if (passRepeat === pass) {
-				passRepeatRef.current.style.borderColor = "green";
-				setPassMatchError(false);
-			} else {
-				passRepeatRef.current.style.borderColor = "red";
-				setPassMatchError(true);
-			}
-		}
-	}, [pass, passRepeat]);
-
-	const handleRegister = async (e) => {
-		e.preventDefault();
-		if (!passMatchError) {
-			navigate("/");
-		}
-	};
-
 	return (
 		<Container
 			style={{
@@ -53,7 +27,7 @@ export default function SignUp() {
 		>
 			<Form
 				className="d-flex flex-column"
-				onSubmit={handleRegister}
+				onSubmit={handleLogin}
 				style={{
 					padding: "25px 20px",
 					border: "1px solid #ccc", // Сіра границя
@@ -63,7 +37,7 @@ export default function SignUp() {
 				}}
 			>
 				<h1 style={{alignSelf: "center"}} className="mb-3">
-					Sign up
+					Sign in
 				</h1>
 				<InputGroup className="mb-2">
 					<Form.Control
@@ -98,57 +72,22 @@ export default function SignUp() {
 						}}
 						required
 					/>
-					<Form.Text
-						id="passwordHelpBlock"
-						style={{
-							fontSize: 10,
-							whiteSpace: "nowrap",
-							overflow: "hidden",
-							textOverflow: "ellipsis",
-							display: "block",
-							maxWidth: "100%", // або конкретна ширина
-						}}
-						title="Your password must be 8-20 characters long, contain letters and numbers, and must not contain spaces, special characters, or emoji."
-						muted
-					>
-						Your password must be 8-20 characters long, contain letters and
-						numbers, and must not contain spaces, special characters, or emoji.
-					</Form.Text>
-				</FloatingLabel>
-
-				<FloatingLabel
-					controlId="floatingInputPassRepeat"
-					label="Password Repeat"
-					className="mb-2"
-				>
-					<Form.Control
-						ref={passRepeatRef}
-						type="password"
-						placeholder="Repeat password"
-						aria-label="Reapeat password"
-						value={passRepeat}
-						onChange={(e) => setPassRepeat(e.target.value)}
-						style={{
-							boxShadow: "none",
-							borderWidth: 2,
-						}}
-						required
-					/>
 				</FloatingLabel>
 				<Button
 					variant="primary"
 					size="lg"
 					style={{
+						borderBottomLeftRadius: 0,
+						borderBottomRightRadius: 0,
 						maxHeight: 60,
 					}}
 					type="submit"
-					disabled={passMatchError}
 				>
 					Sign up
 				</Button>
 				<div style={{display: "flex", justifyContent: "space-between"}}>
 					<Link to="/">Home</Link>
-					<Link to="/sign-in">Sign in</Link>
+					<Link to="/sign-up">Sign up</Link>
 				</div>
 			</Form>
 		</Container>
