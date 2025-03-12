@@ -1,11 +1,12 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useState} from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
-import ButtonGroup from "react-bootstrap/ButtonGroup";
 import {Link, useNavigate} from "react-router-dom";
 import InputGroup from "react-bootstrap/InputGroup";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
+import {signInWithEmailAndPassword} from "firebase/auth";
+import {auth} from "../../logic/firebase";
 
 export default function SignIn() {
 	const navigate = useNavigate();
@@ -13,9 +14,22 @@ export default function SignIn() {
 	const [pass, setPass] = useState("");
 
 	const handleLogin = async (e) => {
-		e.preverntDefault();
-		navigate("/");
+		e.preventDefault();
+		try {
+			await signInWithEmailAndPassword(auth, email, pass);
+			alert("✅ Успішний вхід!");
+			navigate("/");
+		} catch (error) {
+			if (error.code === "auth/user-not-found") {
+				alert("❌ Користувача не знайдено! Перевірте email.");
+			} else if (error.code === "auth/invalid-credential") {
+				alert("❌ Невірний пароль або email");
+			} else {
+				alert("❌ Помилка входу: " + error.message);
+			}
+		}
 	};
+
 	return (
 		<Container
 			style={{
@@ -30,8 +44,8 @@ export default function SignIn() {
 				onSubmit={handleLogin}
 				style={{
 					padding: "25px 20px",
-					border: "1px solid #ccc", // Сіра границя
-					borderRadius: "8px", // Заокруглені кути
+					border: "1px solid #ccc",
+					borderRadius: "8px",
 					boxShadow: "5px 10px 10px rgba(0, 0, 0, 0.1)",
 					width: "60dvh",
 				}}
@@ -83,7 +97,7 @@ export default function SignIn() {
 					}}
 					type="submit"
 				>
-					Sign up
+					Sign in
 				</Button>
 				<div style={{display: "flex", justifyContent: "space-between"}}>
 					<Link to="/">Home</Link>

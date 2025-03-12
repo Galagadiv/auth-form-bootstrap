@@ -1,4 +1,4 @@
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
@@ -6,12 +6,46 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import ButtonGroup from "react-bootstrap/ButtonGroup";
+import Spinner from "react-bootstrap/Spinner";
+
 import {useNavigate} from "react-router-dom";
 
 import {Link} from "react-router-dom";
+import {onAuthStateChanged, signOut} from "firebase/auth";
+import {auth} from "../../logic/firebase";
 
 export default function Home() {
 	const navigate = useNavigate();
+	const [user, setUser] = useState(null);
+
+	const handleSignOut = async (e) => {
+		e.preventDefault();
+		try {
+			await signOut(auth);
+			alert("Ви вийшли з аккаунта");
+		} catch (er) {
+			console.log(er.message);
+			alert("Сталася помилка під час виходу");
+		}
+	};
+
+	useEffect(() => {
+		const logState = onAuthStateChanged(auth, (currentUser) => {
+			if (currentUser) {
+				setUser(currentUser);
+			} else navigate("/sign-in");
+		});
+		return () => logState();
+	}, [auth, navigate]);
+
+	if (user === null) {
+		return (
+			<Spinner animation="border" role="status">
+				<span className="visually-hidden">Loading...</span>
+			</Spinner>
+		);
+	}
+
 	return (
 		<>
 			<header>
@@ -51,7 +85,7 @@ export default function Home() {
 
 									<Button
 										variant="danger"
-										onClick={() => navigate("/sign-up")}
+										onClick={handleSignOut}
 										style={{whiteSpace: "nowrap"}}
 									>
 										Log out

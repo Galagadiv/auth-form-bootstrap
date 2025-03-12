@@ -2,10 +2,15 @@ import React, {useEffect, useRef, useState} from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
-import ButtonGroup from "react-bootstrap/ButtonGroup";
 import {Link, useNavigate} from "react-router-dom";
 import InputGroup from "react-bootstrap/InputGroup";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
+import {
+	createUserWithEmailAndPassword,
+	sendEmailVerification,
+	signInWithEmailAndPassword,
+} from "firebase/auth";
+import {auth} from "../../logic/firebase";
 
 export default function SignUp() {
 	const navigate = useNavigate();
@@ -13,32 +18,65 @@ export default function SignUp() {
 	const [pass, setPass] = useState("");
 	const [passRepeat, setPassRepeat] = useState("");
 	const passRepeatRef = useRef(null);
-	const [passMatchError, setPassMatchError] = useState(null);
+	const [passMatchError, setPassMatchError] = useState(false);
+	const [confirmSent, setConfirmSent] = useState(false);
+	const [user, setUser] = useState(null);
 
 	const validatePassword = (password) => {
 		const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/;
-		if (!passwordRegex.test(password)) {
+		if (passwordRegex.test(password)) {
 			return true;
 		}
 		return false;
 	};
 
 	useEffect(() => {
-		if (passRepeatRef.current && validatePassword(pass) && passRepeat !== "") {
-			if (passRepeat === pass) {
+		if (passRepeatRef.current && validatePassword(pass)) {
+			if (passRepeat === pass && passRepeat !== "") {
 				passRepeatRef.current.style.borderColor = "green";
 				setPassMatchError(false);
-			} else {
+			} else if (passRepeat !== "") {
 				passRepeatRef.current.style.borderColor = "red";
 				setPassMatchError(true);
 			}
 		}
 	}, [pass, passRepeat]);
 
+	useEffect(() => {
+		if (confirmSent) {
+			const interval = setInterval(async () => {
+				await auth.currentUser.reload();
+				if (auth.currentUser.emailVerified) {
+					clearInterval(interval);
+					await signInWithEmailAndPassword(auth, email, pass);
+					navigate("/");
+				}
+			}, 3000);
+
+			return () => clearInterval(interval);
+		}
+	}, [confirmSent, email, pass, navigate]);
+
 	const handleRegister = async (e) => {
 		e.preventDefault();
-		if (!passMatchError) {
-			navigate("/");
+		if (!email || !validatePassword(pass) || pass !== passRepeat) {
+			alert("Please fill in all fields correctly.");
+			return;
+		}
+
+		try {
+			const userCredential = await createUserWithEmailAndPassword(
+				auth,
+				email,
+				pass
+			);
+			const newUser = userCredential.user;
+			setUser(newUser);
+			await sendEmailVerification(newUser);
+			setConfirmSent(true);
+			alert("Confirm your email");
+		} catch (er) {
+			alert(er.message);
 		}
 	};
 
